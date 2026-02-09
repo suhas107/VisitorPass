@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="dp-card">
+      <h3 class="dp-section-title mb-3">{% if challenge_only %}Enter OTP{% else %}Enable MFA{% endif %}</h3>
+      {% if qr_b64 %}
+        <div class="d-flex gap-3 align-items-center mb-3">
+          <div class="qr-frame">
+            <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR Code" style="max-width:220px;">
+          </div>
+          <div>
+            <p class="dp-subtle mb-1">Scan with your authenticator app.</p>
+            <small class="text-muted">URI: {{ provisioning_uri }}</small>
+          </div>
+        </div>
+      {% endif %}
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.otp.label(class='form-label') }}
+          {{ form.otp(class='form-control form-control-lg') }}
+        </div>
+        {{ form.submit(class='btn btn-primary w-100') }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

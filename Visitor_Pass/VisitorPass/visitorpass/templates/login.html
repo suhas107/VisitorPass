@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="dp-card">
+      <h3 class="dp-section-title mb-3">Welcome back</h3>
+      <p class="dp-subtle">Authenticate with password; OTP will be required if MFA is enabled.</p>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            {% if category == 'danger' %}
+              <div class="text-center fw-bold fs-5 text-danger mb-2">{{ message }}</div>
+            {% else %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% if form.errors %}
+      <div class="alert alert-warning">
+        {% for field, errors in form.errors.items() %}
+          {% for error in errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          {{ form.email.label(class='form-label') }}
+          {{ form.email(class='form-control form-control-lg') }}
+        </div>
+        <div class="mb-3">
+          {{ form.password.label(class='form-label') }}
+          {{ form.password(class='form-control form-control-lg') }}
+        </div>
+        {{ form.submit(class='btn btn-primary w-100') }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

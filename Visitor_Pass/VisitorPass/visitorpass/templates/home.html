@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="hero mb-4">
+  <span class="badge badge-soft text-uppercase mb-2">Zero-Trust Visitor Control</span>
+  <h1 class="display-5 fw-bold">VisitorPass keeps your apartment entries verifiable, encrypted, and auditable.</h1>
+  <p class="dp-subtle mt-2">Flagship-grade MFA, RSA signatures, AES-GCM encryption, and QR validation in a sleek interface for residents and guards.</p>
+  <div class="mt-3 d-flex gap-3 flex-wrap">
+    <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">Get Started</a>
+    <a class="btn btn-secondary btn-lg" href="{{ url_for('auth.login') }}">Sign In</a>
+  </div>
+</div>
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="dp-card h-100">
+      <h5 class="dp-section-title">Residents</h5>
+      <p class="dp-subtle">Create time-bound visitor passes with per-pass encryption and signatures. Share via QR instantly.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="dp-card h-100">
+      <h5 class="dp-section-title">Guards</h5>
+      <p class="dp-subtle">Scan or paste tokens; automatic signature verification, key unwrap, and audit logging.</p>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="dp-card h-100">
+      <h5 class="dp-section-title">Admins</h5>
+      <p class="dp-subtle">Oversee users, keys, and logs with enforced ACLs and MFA-backed sessions.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

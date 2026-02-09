@@ -1,0 +1,9 @@
+C:\Users\welcome\Desktop\VisitorPass>
+C:\Users\welcome\Desktop\VisitorPass> cd VisitorPass
+C:\Users\welcome\Desktop\VisitorPass\VisitorPass> cd visitorpass
+C:\Users\welcome\Desktop\VisitorPass\VisitorPass\visitorpass> python
+>>> exit ()
+C:\Users\welcome\Desktop\VisitorPass\VisitorPass\visitorpass> python -m venv .venv
+C:\Users\welcome\Desktop\VisitorPass\VisitorPass\visitorpass> .\.venv\Scripts\Activate.ps1
+(.venv) PS C:\Users\welcome\Desktop\VisitorPass\VisitorPass\visitorpass> pip install -r requirements.txt    
+(.venv) PS C:\Users\welcome\Desktop\VisitorPass\VisitorPass\visitorpass> python app.py

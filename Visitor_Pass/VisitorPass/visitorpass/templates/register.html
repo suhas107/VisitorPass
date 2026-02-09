@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+<div class="dp-card">
+<h2 class="dp-section-title mb-3">Register</h2>
+<p class="dp-subtle">Choose your role and complete the tailored fields. Guard enroll and email verification codes come from your admin/.env for this demo.</p>
+<form method="post">
+  {{ form.hidden_tag() }}
+  <div class="mb-3">
+    <label class="form-label">I am a</label>
+    <div class="btn-group" role="group">
+      <input type="radio" class="btn-check" name="role_choice" id="roleResident" value="RESIDENT" checked>
+      <label class="btn btn-outline-primary" for="roleResident">Resident</label>
+      <input type="radio" class="btn-check" name="role_choice" id="roleGuard" value="GUARD">
+      <label class="btn btn-outline-primary" for="roleGuard">Guard</label>
+    </div>
+    {{ form.role(id='roleSelect', class='d-none') }}
+  </div>
+
+  <div class="row">
+    <div class="col-md-6">
+      {{ form.name.label(class='form-label') }}
+      {{ form.name(class='form-control form-control-lg') }}
+    </div>
+    <div class="col-md-6">
+      {{ form.email.label(class='form-label') }}
+      {{ form.email(class='form-control form-control-lg') }}
+    </div>
+  </div>
+  <div class="row mt-2">
+    <div class="col-md-6">
+      {{ form.password.label(class='form-label') }}
+      {{ form.password(class='form-control form-control-lg') }}
+    </div>
+    <div class="col-md-6">
+      {{ form.confirm.label(class='form-label') }}
+      {{ form.confirm(class='form-control form-control-lg') }}
+    </div>
+  </div>
+
+  <div id="residentFields" class="mt-3">
+    <h5>Resident Details</h5>
+    <div class="row mt-2">
+      <div class="col-md-6">
+        {{ form.room_number.label(class='form-label') }}
+        {{ form.room_number(class='form-control form-control-lg') }}
+      </div>
+      <div class="col-md-6">
+        {{ form.phone.label(class='form-label') }}
+        {{ form.phone(class='form-control form-control-lg') }}
+      </div>
+    </div>
+  </div>
+
+  <div id="guardFields" class="mt-3 d-none">
+    <h5>Guard Details</h5>
+    <div class="row mt-2">
+      <div class="col-md-6">
+        {{ form.guard_code.label(class='form-label') }}
+        {{ form.guard_code(class='form-control form-control-lg') }}
+        <small class="text-muted">Provided by admin; keeps guard enrollment restricted.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-3" id="residentEnrollRow">
+    <div class="col-md-6">
+      {{ form.email_code.label(class='form-label') }}
+      {{ form.email_code(class='form-control form-control-lg') }}
+      <small class="text-muted">Resident enroll code from `.env` (demo)</small>
+    </div>
+  </div>
+  <div class="mt-3">
+    {{ form.submit(class='btn btn-primary w-100') }}
+  </div>
+</form>
+<script>
+  (function () {
+    const roleSelect = document.getElementById('roleSelect');
+    const residentFields = document.getElementById('residentFields');
+    const guardFields = document.getElementById('guardFields');
+    const residentEnrollRow = document.getElementById('residentEnrollRow');
+    const radios = document.querySelectorAll('input[name=\"role_choice\"]');
+
+    function syncRole(value) {
+      roleSelect.value = value;
+      if (value === 'GUARD') {
+        guardFields.classList.remove('d-none');
+        residentFields.classList.add('d-none');
+        residentEnrollRow.classList.add('d-none');
+      } else {
+        residentFields.classList.remove('d-none');
+        guardFields.classList.add('d-none');
+        residentEnrollRow.classList.remove('d-none');
+      }
+    }
+
+    const initial = roleSelect.value || 'RESIDENT';
+    syncRole(initial);
+    radios.forEach(r => {
+      if (r.value === initial) r.checked = true;
+      r.addEventListener('change', (e) => syncRole(e.target.value));
+    });
+  })();
+</script>
+</div>
+  </div>
+</div>
+{% endblock %}

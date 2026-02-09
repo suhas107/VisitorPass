@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h2 class="dp-section-title mb-0">Dashboard</h2>
+    <div class="dp-subtle">Premium-grade security overview for {{ current_user.role }}</div>
+  </div>
+  {% if current_user.role == 'RESIDENT' %}
+    <a class="btn btn-primary" href="{{ url_for('rp.create_pass') }}">Create Visitor Pass</a>
+  {% elif current_user.role == 'GUARD' %}
+    <a class="btn btn-primary" href="{{ url_for('rp.guard_scan') }}">Open Scanner</a>
+  {% elif current_user.role == 'ADMIN' %}
+    <a class="btn btn-primary" href="{{ url_for('admin.manage_users') }}">Manage Users</a>
+  {% endif %}
+</div>
+
+{% if current_user.role == 'RESIDENT' %}
+  <div class="dp-card mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0">Your Visitor Passes</h5>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('rp.logs') }}" class="btn btn-secondary btn-sm">Entry Logs</a>
+        <a href="{{ url_for('auth.enable_mfa') }}" class="btn btn-outline-light btn-sm">Enable MFA</a>
+      </div>
+    </div>
+    {% if passes %}
+      <table class="table table-striped align-middle">
+        <thead><tr><th>ID</th><th>Visitor</th><th>Status</th><th>Valid</th><th></th></tr></thead>
+        <tbody>
+          {% for p in passes %}
+            <tr>
+              <td class="small">{{ p.id }}</td>
+              <td>{{ p.visitor_name }}</td>
+              <td><span class="badge bg-info text-dark">{{ p.status }}</span></td>
+              <td>{{ p.valid_from }} - {{ p.valid_until }}</td>
+              <td class="text-end">
+                <a href="{{ url_for('rp.pass_detail', pass_id=p.id) }}" class="btn btn-sm btn-primary">View</a>
+                {% if p.status == 'ACTIVE' %}
+                <form method="post" action="{{ url_for('rp.revoke_pass', pass_id=p.id) }}" style="display:inline-block;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-warning text-dark" type="submit">Revoke</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="dp-subtle mb-0">No passes yet. Create your first secure visitor pass.</p>
+    {% endif %}
+  </div>
+{% elif current_user.role == 'GUARD' %}
+  <div class="dp-card mb-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Guard Toolkit</h5>
+      <div class="d-flex gap-2">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('rp.guard_scan') }}">Scanner</a>
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('rp.directory') }}">Resident Directory</a>
+      </div>
+    </div>
+  </div>
+  <div class="dp-card">
+    <h5>Your Recent Logs</h5>
+    {% include 'logs_table.html' with context %}
+  </div>
+{% elif current_user.role == 'ADMIN' %}
+  <div class="dp-card mb-3">
+    <div class="d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Admin Controls</h5>
+      <div class="d-flex gap-2">
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.manage_users') }}">Manage Users</a>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('admin.all_logs') }}">View Logs</a>
+      </div>
+    </div>
+  </div>
+  <div class="dp-card">
+    <h5>Recent Activity</h5>
+    {% include 'logs_table.html' with context %}
+  </div>
+{% endif %}
+{% endblock %}

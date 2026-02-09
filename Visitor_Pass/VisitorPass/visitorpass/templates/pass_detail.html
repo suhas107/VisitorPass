@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="dp-card mb-3">
+      <h3 class="dp-section-title mb-2">Pass {{ pass_obj.id }}</h3>
+      <p class="dp-subtle">Visitor: {{ pass_obj.visitor_name }} · Status: {{ pass_obj.status }}</p>
+      <p class="dp-subtle">Valid: {{ pass_obj.valid_from }} — {{ pass_obj.valid_until }}</p>
+      {% if qr_b64 %}
+        <div class="qr-frame mb-3 text-center">
+          <img src="data:image/png;base64,{{ qr_b64 }}" alt="QR" style="max-width:260px;">
+        </div>
+      {% else %}
+        <div class="alert alert-warning">Token too large for QR at this size; use the token text below or reissue with shorter visitor details.</div>
+      {% endif %}
+      <div class="mb-3">
+        <label class="form-label">Token (Base64URL)</label>
+        <div class="token-box">{{ token_str }}</div>
+      </div>
+      <form method="post" action="{{ url_for('rp.revoke_pass', pass_id=pass_obj.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-warning text-dark" type="submit">Revoke</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

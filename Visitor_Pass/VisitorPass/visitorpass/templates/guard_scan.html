@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row g-3" id="scanShell">
+  <div class="col-lg-6">
+    <div class="dp-card h-100">
+      <h3 class="dp-section-title">Live QR Scanner</h3>
+      <p class="dp-subtle">Real-time verification with signature check, RSA unwrap, and AES-GCM decrypt.</p>
+      <div id="reader" class="mb-3" style="width:100%; max-width:420px"></div>
+      <div id="result" class="mt-3"></div>
+      <div class="mt-3">
+        <label class="form-label">Or upload a QR image</label>
+        <input type="file" class="form-control" id="qrFile" accept="image/*">
+        <button class="btn btn-secondary mt-2" id="scanFileBtn" type="button">Scan Uploaded QR</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="dp-card h-100">
+      <h4 class="dp-section-title">Use ScanApp.org (external)</h4>
+      <p class="dp-subtle">Prefer a different scanner? Open ScanApp.org in a new tab, scan the QR, then paste the decoded text here to verify.</p>
+      <a class="btn btn-primary mb-3" href="https://scanapp.org/" target="_blank" rel="noopener">Open ScanApp.org</a>
+      <div class="mb-2">
+        <label class="form-label">Paste decoded token</label>
+        <textarea class="form-control" id="externalToken" rows="3" placeholder="Paste text from ScanApp.org"></textarea>
+      </div>
+      <button class="btn btn-secondary" id="verifyExternalBtn" type="button">Verify Pasted Token</button>
+      <div id="externalResult" class="mt-2"></div>
+    </div>
+  </div>
+</div>
+<div id="resultOnly" class="mt-3"></div>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+  const resultBox = document.getElementById('result');
+  const scanShell = document.getElementById('scanShell');
+  const resultOnly = document.getElementById('resultOnly');
+  const readerId = 'reader';
+  const html5Qrcode = new Html5Qrcode(readerId);
+  let cameraRunning = false;
+
+  async function finalizeResult(data, type = 'info') {
+    // Stop camera if running and show full-width result card
+    if (cameraRunning) {
+      try { await html5Qrcode.stop(); } catch (e) {}
+      cameraRunning = false;
+    }
+    if (scanShell) scanShell.innerHTML = '';
+    const details = data.details ? `<pre class="mb-3 small text-start">${JSON.stringify(data.details, null, 2)}</pre>` : '';
+    let statusText = 'Access Denied';
+    let statusClass = 'danger';
+    if (data.result === 'VALID') {
+      statusText = 'Access Approved';
+      statusClass = 'success';
+    } else if (data.result === 'USED') {
+      statusText = 'Pass Already Used';
+      statusClass = 'warning';
+    }
+    const notes = data.notes ? `<p class="dp-subtle">${data.notes}</p>` : '';
+    const actionBtn = `<a class="btn btn-secondary" href="{{ url_for('rp.guard_dashboard') }}">Back to dashboard</a>`;
+    resultOnly.innerHTML = `
+      <div class="dp-card text-center">
+        <h3 class="fw-bold text-${statusClass}">${statusText}</h3>
+        ${notes}
+        ${details}
+        ${actionBtn}
+      </div>`;
+  }
+
+  function showStatus(msg, type) {
+    resultBox.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  }
+
+  async function parseResponse(resp) {
+    const text = await resp.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {result: "ERROR", notes: text};
+    }
+  }
+
+  function onScanSuccess(decodedText) {
+    fetch('{{ url_for('rp.guard_verify') }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
+      body: JSON.stringify({token: decodedText})
+    }).then(parseResponse).then(data => {
+      const type = data.result === 'VALID' ? 'success' : 'danger';
+      finalizeResult(data, type);
+    }).catch(err => {
+      showStatus(err, 'danger');
+    });
+  }
+
+  function onScanFailure(error) {
+    // Keep scanning; show a subtle hint
+    if (!resultBox.innerHTML) {
+      showStatus('Align the QR fully in frame and hold steady.', 'secondary');
+    }
+  }
+
+  Html5Qrcode.getCameras().then(cameras => {
+    const cameraId = cameras && cameras[0] ? cameras[0].id : null;
+    if (!cameraId) {
+      showStatus('No camera detected.', 'danger');
+      return;
+    }
+    html5Qrcode.start(
+      cameraId,
+      { fps: 15, qrbox: { width: 320, height: 320 }, aspectRatio: 1.0, disableFlip: true },
+      onScanSuccess,
+      onScanFailure
+    ).then(() => { cameraRunning = true; }).catch(err => { showStatus(err, 'danger'); });
+  }).catch(err => showStatus(err, 'danger'));
+
+  document.getElementById('scanFileBtn').addEventListener('click', async () => {
+    const input = document.getElementById('qrFile');
+    if (!input.files || !input.files.length) {
+      showStatus('Choose an image file with a QR code.', 'warning');
+      return;
+    }
+    const file = input.files[0];
+    try {
+      // Use higher resolution decode for better accuracy
+      const decodedText = await html5Qrcode.scanFile(file, true);
+      onScanSuccess(decodedText);
+      showStatus('QR decoded from image and submitted for verification.', 'info');
+    } catch (err) {
+      // Fallback to jsQR for dense QRs
+      try {
+        const decodedText = await decodeWithJsQR(file);
+        if (decodedText) {
+          onScanSuccess(decodedText);
+          showStatus('QR decoded via fallback and submitted for verification.', 'info');
+        } else {
+          showStatus('Could not read QR from image. Try a clearer/straighter photo with good contrast.', 'danger');
+        }
+      } catch (err2) {
+        showStatus('Could not read QR from image. Try a clearer/straighter photo with good contrast.', 'danger');
+      }
+    }
+  });
+
+  document.getElementById('verifyExternalBtn').addEventListener('click', async () => {
+    const token = document.getElementById('externalToken').value.trim();
+    if (!token) {
+      showStatus('Paste a decoded token first.', 'warning');
+      return;
+    }
+    try {
+      const resp = await fetch('{{ url_for('rp.guard_verify') }}', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
+        body: JSON.stringify({token})
+      });
+      const data = await parseResponse(resp);
+      const type = data.result === 'VALID' ? 'success' : 'danger';
+      finalizeResult(data, type);
+    } catch (err) {
+      showStatus(err, 'danger');
+    }
+  });
+
+  function decodeWithJsQR(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
+          resolve(code ? code.data : null);
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+{% endblock %}

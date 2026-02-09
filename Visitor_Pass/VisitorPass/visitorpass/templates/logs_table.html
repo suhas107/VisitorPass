@@ -1,0 +1,19 @@
+{% if logs %}
+<table class="table table-bordered">
+  <thead><tr><th>ID</th><th>Pass</th><th>Guard</th><th>Result</th><th>When</th><th>Notes</th></tr></thead>
+  <tbody>
+    {% for log in logs %}
+    <tr>
+      <td>{{ log.id }}</td>
+      <td>{{ log.pass_id }}</td>
+      <td>{{ log.guard_id }}</td>
+      <td>{{ log.result }}</td>
+      <td>{{ log.scanned_at }}</td>
+      <td>{{ log.notes }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No logs.</p>
+{% endif %}
