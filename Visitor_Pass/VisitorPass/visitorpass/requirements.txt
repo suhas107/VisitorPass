@@ -11,3 +11,5 @@ itsdangerous==2.1.2
 pytest==8.2.1
 email-validator==2.1.1
 Pillow>=10.3.0
+gunicorn==21.2.0
+psycopg2-binary==2.9.9
