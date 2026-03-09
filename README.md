@@ -2,7 +2,7 @@
 Secure apartment visitor pass demo showcasing MFA, ACL/RBAC, encryption, signatures, and QR validation. Built with Flask, SQLAlchemy, and open-source crypto primitives.
 
 ## Quickstart
-1. `cd dormpass && python3 -m venv .venv && source .venv/bin/activate` (or `Scripts\activate` on Windows)
+1. `cd visitorpass && python3 -m venv .venv && source .venv/bin/activate` (or `Scripts\activate` on Windows)
 2. `pip install -r requirements.txt`
 3. Copy `.env.example` to `.env` and adjust secrets. Default admin: `admin@visitorpass.local / Admin@12345` (change after first login). Demo codes: `resident-secret` (resident enroll) and `guard-secret` (guard enroll).
 4. `python app.py` and open http://localhost:5000
